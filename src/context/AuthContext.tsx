@@ -51,7 +51,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(false)
       }
     }
-    
+
     checkSession()
 
     // Listen for changes on auth state
@@ -79,7 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false)
       return
     }
-    
+
     setFetchAttempted(true)
     try {
       const { data, error } = await supabase
@@ -97,14 +97,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             avatar_url: null,
             role: user?.email === 'pastendro@gmail.com' ? 'admin' : 'user', // Grant admin access to pastendro@gmail.com
           }
-          
+
           const { error: insertError } = await supabase
             .from('profiles')
             .insert([newProfile])
-          
+
           if (insertError) {
             console.error('Error creating profile:', insertError)
-            
+
             // If we can't create the profile in the database, still set it locally
             // This ensures the user can access admin features
             if (user?.email === 'pastendro@gmail.com') {
@@ -129,13 +129,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             role: 'admin'
           }
           setProfile(updatedProfile)
-          
+
           // Try to update in database too
           const { error: updateError } = await supabase
             .from('profiles')
             .update({ role: 'admin' })
             .eq('id', userId)
-          
+
           if (updateError) {
             console.error('Error updating profile to admin:', updateError)
           }
@@ -145,7 +145,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       console.error('Unexpected error fetching profile:', error)
-      
+
       // Ensure pastendro@gmail.com gets admin access even if there are errors
       if (user?.email === 'pastendro@gmail.com') {
         console.log('Setting admin role for pastendro@gmail.com despite errors')
@@ -169,7 +169,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signIn: async (email: string, password: string) => {
       try {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-        
+
         if (data.session?.user) {
           await fetchProfile(data.session.user.id)
         }
@@ -182,7 +182,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signUp: async (email: string, password: string) => {
       try {
         const { data, error } = await supabase.auth.signUp({ email, password })
-        
+
         if (data.session?.user) {
           // Create a default profile for new users
           const newProfile = {
@@ -191,11 +191,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             avatar_url: null,
             role: email === 'pastendro@gmail.com' ? 'admin' : 'user', // Grant admin access to pastendro@gmail.com
           }
-          
+
           await supabase
             .from('profiles')
             .insert([newProfile])
-          
+
           setProfile(newProfile as Profile)
         }
         return { data, error }
@@ -206,12 +206,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     },
     signOut: async () => {
       try {
-        await supabase.auth.signOut()
-        setUser(null)
-        setProfile(null)
-        navigate('/')
+        // Clear local state first for immediate UI feedback
+        setUser(null);
+        setProfile(null);
+        setFetchAttempted(false);
+
+        // Sign out from Supabase
+        const { error } = await supabase.auth.signOut();
+
+        if (error) {
+          console.error('Error signing out:', error);
+          throw error;
+        }
+
+        // Navigate to home page
+        navigate('/');
       } catch (error) {
-        console.error('Error signing out:', error)
+        console.error('Error signing out:', error);
+        // Still navigate even if there's an error
+        navigate('/');
       }
     },
     refreshProfile: async () => {

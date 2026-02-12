@@ -8,16 +8,18 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables');
 }
 
-console.log('Initializing Supabase client with:', {
-  url: supabaseUrl,
-  hasKey: !!supabaseAnonKey
-});
+// Only log in development mode
+if (import.meta.env.DEV) {
+  console.log('Supabase client initialized');
+}
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true
+    detectSessionInUrl: true,
+    storageKey: 'ofsledger-auth',
+    flowType: 'pkce'
   },
   db: {
     schema: 'public'
@@ -28,19 +30,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     }
   },
   global: {
-    // Add debug logging
-    fetch: (url: string, options: RequestInit) => {
-      console.log('Supabase Request:', url, options);
-      return fetch(url, options).then(async (response) => {
-        const clone = response.clone();
-        try {
-          const data = await clone.json();
-          console.log('Supabase Response:', data);
-        } catch (e) {
-          console.log('Supabase Response:', await clone.text());
-        }
-        return response;
-      });
+    headers: {
+      'x-client-info': 'ofsledger-web'
     }
   }
 })

@@ -13,36 +13,37 @@ const AdminSignIn = () => {
   const { signIn, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  
+
   // Check if already signed in
   useEffect(() => {
     const checkAdminStatus = async () => {
       if (!user) return;
-      
-      // Special case for pastendro@gmail.com
-      if (user.email === 'pastendro@gmail.com') {
+
+      // Known admin emails - bypass profile check
+      const knownAdminEmails = ['generalprep.ig@gmail.com', 'pastendro@gmail.com'];
+      if (user.email && knownAdminEmails.includes(user.email.toLowerCase())) {
         setIsAdmin(true);
         navigate('/admin');
         return;
       }
-      
+
       try {
         const { data, error } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', user.id)
           .single();
-        
+
         if (error) {
           console.error('Error checking admin status:', error);
           return;
         }
-        
+
         if (data && data.role === 'admin') {
           setIsAdmin(true);
           navigate('/admin');
@@ -51,18 +52,18 @@ const AdminSignIn = () => {
         console.error('Unexpected error checking admin status:', error);
       }
     };
-    
+
     checkAdminStatus();
   }, [user, navigate]);
-  
+
   // Auto-fill pastendro@gmail.com for convenience
   useEffect(() => {
     setEmail('');
   }, []);
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email || !password) {
       toast({
         title: "Error",
@@ -71,18 +72,19 @@ const AdminSignIn = () => {
       });
       return;
     }
-    
+
     setIsLoading(true);
-    
+
     try {
       const { data, error } = await signIn(email, password);
-      
+
       if (error) {
         throw error;
       }
-      
-      // Special case for pastendro@gmail.com
-      if (email === 'pastendro@gmail.com') {
+
+      // Known admin emails - allow access even if profile check fails
+      const knownAdminEmails = ['generalprep.ig@gmail.com', 'pastendro@gmail.com'];
+      if (knownAdminEmails.includes(email.toLowerCase())) {
         toast({
           title: "Welcome back, Admin",
           description: "You have successfully signed in to the admin dashboard",
@@ -90,7 +92,7 @@ const AdminSignIn = () => {
         navigate("/admin");
         return;
       }
-      
+
       // For other users, check if they have admin role
       if (data?.user) {
         const { data: profileData, error: profileError } = await supabase
@@ -98,12 +100,12 @@ const AdminSignIn = () => {
           .select('role')
           .eq('id', data.user.id)
           .single();
-        
+
         if (profileError) {
           console.error('Error checking admin status:', profileError);
           throw new Error('Could not verify admin privileges');
         }
-        
+
         if (profileData && profileData.role === 'admin') {
           toast({
             title: "Welcome back, Admin",
@@ -129,7 +131,7 @@ const AdminSignIn = () => {
       setIsLoading(false);
     }
   };
-  
+
   return (
     <div className="container flex items-center justify-center min-h-screen py-12">
       <Card className="w-full max-w-md">

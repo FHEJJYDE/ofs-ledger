@@ -48,39 +48,29 @@ export function useWalletConnections(isAdmin = false) {
   // Fetch wallet connections
   useEffect(() => {
     if (!user) return;
-    
+
     const fetchWalletConnections = async () => {
       setLoading(true);
       setError(null);
-      
+
       try {
-        // Ensure the wallet_connections table exists
-        const tableExists = await ensureWalletConnectionsTable();
-        
-        if (!tableExists) {
-          throw new Error('Could not create or access wallet_connections table');
-        }
-        
-        // Create sample data if needed
-        await createSampleData(user.id);
-        
         // For admin, fetch all wallet connections with user details
         // For regular users, fetch only their own wallet connections
         const query = isAdmin
           ? supabase
-              .from('wallet_connections')
-              .select('*, profiles(email, full_name)')
-              .order('connected_at', { ascending: false })
+            .from('wallet_connections')
+            .select('*, profiles(email, full_name)')
+            .order('connected_at', { ascending: false })
           : supabase
-              .from('wallet_connections')
-              .select('*')
-              .eq('user_id', user.id)
-              .order('connected_at', { ascending: false });
-        
+            .from('wallet_connections')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('connected_at', { ascending: false });
+
         const { data, error } = await query;
-        
+
         if (error) throw error;
-        
+
         // Transform data to include user_email and user_name
         const transformedData = data.map((wallet: any) => ({
           id: wallet.id,
@@ -95,25 +85,25 @@ export function useWalletConnections(isAdmin = false) {
           user_email: wallet.profiles?.email || '',
           user_name: wallet.profiles?.full_name || '',
         }));
-        
+
         setWalletConnections(transformedData);
-        
+
         // Calculate stats
-        const validatedCount = transformedData.filter(wallet => 
+        const validatedCount = transformedData.filter(wallet =>
           wallet.validated === true || wallet.validation_status === 'validated'
         ).length;
-        
+
         // Check if user has KYC documents
         let kycApproved = false;
         let kycSubmitted = false;
-        
+
         if (!isAdmin && user) {
           try {
             const { data: kycData } = await supabase
               .from('kyc_documents')
               .select('status')
               .eq('user_id', user.id);
-              
+
             if (kycData && kycData.length > 0) {
               kycSubmitted = true;
               kycApproved = kycData.some(doc => doc.status === 'approved');
@@ -122,7 +112,7 @@ export function useWalletConnections(isAdmin = false) {
             console.error('Error fetching KYC status:', kycError);
           }
         }
-        
+
         setStats({
           total: transformedData.length,
           validated: validatedCount,
@@ -133,7 +123,7 @@ export function useWalletConnections(isAdmin = false) {
       } catch (err) {
         console.error('Error fetching wallet connections:', err);
         setError('Failed to load wallet connections');
-        
+
         // Use empty arrays and default stats as fallback
         setWalletConnections([]);
         setStats({
@@ -147,22 +137,22 @@ export function useWalletConnections(isAdmin = false) {
         setLoading(false);
       }
     };
-    
+
     fetchWalletConnections();
-    
+
     // Set up realtime subscription
     const channel: RealtimeChannel = supabase
       .channel('public:wallet_connections')
-      .on('postgres_changes', 
-        { 
+      .on('postgres_changes',
+        {
           event: '*', // Listen for all events (INSERT, UPDATE, DELETE)
-          schema: 'public', 
+          schema: 'public',
           table: 'wallet_connections',
           ...(isAdmin ? {} : { filter: `user_id=eq.${user.id}` }) // Filter for user's own connections if not admin
-        }, 
+        },
         async (payload) => {
           console.log('Wallet connection change received:', payload);
-          
+
           try {
             // Handle different event types
             if (payload.eventType === 'INSERT') {
@@ -172,9 +162,9 @@ export function useWalletConnections(isAdmin = false) {
                 .select(isAdmin ? '*, profiles(email, full_name)' : '*')
                 .eq('id', payload.new.id)
                 .single();
-              
+
               if (error) throw error;
-              
+
               if (data) {
                 const walletData = data as any;
                 const newWallet: WalletConnection = {
@@ -190,7 +180,7 @@ export function useWalletConnections(isAdmin = false) {
                   user_email: walletData.profiles?.email || '',
                   user_name: walletData.profiles?.full_name || '',
                 };
-                
+
                 setWalletConnections(prev => [newWallet, ...prev]);
                 setStats(prev => ({
                   ...prev,
@@ -200,32 +190,32 @@ export function useWalletConnections(isAdmin = false) {
               }
             } else if (payload.eventType === 'UPDATE') {
               // Update existing wallet connection
-              setWalletConnections(prev => 
-                prev.map(wallet => 
-                  wallet.id === payload.new.id 
-                    ? { 
-                        ...wallet, 
-                        wallet_address: payload.new.wallet_address || wallet.wallet_address,
-                        chain_type: payload.new.chain_type || wallet.chain_type,
-                        validated: payload.new.validated,
-                        validation_status: payload.new.validation_status,
-                        validated_at: payload.new.validated_at,
-                      } 
+              setWalletConnections(prev =>
+                prev.map(wallet =>
+                  wallet.id === payload.new.id
+                    ? {
+                      ...wallet,
+                      wallet_address: payload.new.wallet_address || wallet.wallet_address,
+                      chain_type: payload.new.chain_type || wallet.chain_type,
+                      validated: payload.new.validated,
+                      validation_status: payload.new.validation_status,
+                      validated_at: payload.new.validated_at,
+                    }
                     : wallet
                 )
               );
-              
+
               // Update stats if validation status changed
-              if (payload.old.validated !== payload.new.validated || 
-                  payload.old.validation_status !== payload.new.validation_status) {
-                const isNewlyValidated = 
-                  payload.new.validated === true || 
+              if (payload.old.validated !== payload.new.validated ||
+                payload.old.validation_status !== payload.new.validation_status) {
+                const isNewlyValidated =
+                  payload.new.validated === true ||
                   payload.new.validation_status === 'validated';
-                
-                const wasValidated = 
-                  payload.old.validated === true || 
+
+                const wasValidated =
+                  payload.old.validated === true ||
                   payload.old.validation_status === 'validated';
-                
+
                 if (isNewlyValidated && !wasValidated) {
                   setStats(prev => ({
                     ...prev,
@@ -242,15 +232,15 @@ export function useWalletConnections(isAdmin = false) {
               }
             } else if (payload.eventType === 'DELETE') {
               // Remove deleted wallet connection
-              setWalletConnections(prev => 
+              setWalletConnections(prev =>
                 prev.filter(wallet => wallet.id !== payload.old.id)
               );
-              
+
               // Update stats
-              const wasValidated = 
-                payload.old.validated === true || 
+              const wasValidated =
+                payload.old.validated === true ||
                 payload.old.validation_status === 'validated';
-              
+
               setStats(prev => ({
                 total: prev.total - 1,
                 validated: wasValidated ? prev.validated - 1 : prev.validated,
@@ -265,47 +255,47 @@ export function useWalletConnections(isAdmin = false) {
         }
       )
       .subscribe();
-    
+
     console.log('Subscribed to wallet connections channel');
-    
+
     return () => {
       console.log('Unsubscribing from wallet connections channel');
       channel.unsubscribe();
     };
   }, [user, isAdmin]);
-  
+
   // Add a function to manually refresh wallet connections
   const refreshWallets = async () => {
     if (!user) return;
-    
+
     setLoading(true);
     setError(null);
-    
+
     try {
       // Ensure the wallet_connections table exists
       const tableExists = await ensureWalletConnectionsTable();
-      
+
       if (!tableExists) {
         throw new Error('Could not create or access wallet_connections table');
       }
-      
+
       // For admin, fetch all wallet connections with user details
       // For regular users, fetch only their own wallet connections
       const query = isAdmin
         ? supabase
-            .from('wallet_connections')
-            .select('*, profiles(email, full_name)')
-            .order('connected_at', { ascending: false })
+          .from('wallet_connections')
+          .select('*, profiles(email, full_name)')
+          .order('connected_at', { ascending: false })
         : supabase
-            .from('wallet_connections')
-            .select('*')
-            .eq('user_id', user.id)
-            .order('connected_at', { ascending: false });
-      
+          .from('wallet_connections')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('connected_at', { ascending: false });
+
       const { data, error } = await query;
-      
+
       if (error) throw error;
-      
+
       // Transform data to include user_email and user_name
       const transformedData = data.map((wallet: any) => ({
         id: wallet.id,
@@ -320,14 +310,14 @@ export function useWalletConnections(isAdmin = false) {
         user_email: wallet.profiles?.email || '',
         user_name: wallet.profiles?.full_name || '',
       }));
-      
+
       setWalletConnections(transformedData);
-      
+
       // Calculate stats
-      const validatedCount = transformedData.filter(wallet => 
+      const validatedCount = transformedData.filter(wallet =>
         wallet.validated === true || wallet.validation_status === 'validated'
       ).length;
-      
+
       setStats({
         total: transformedData.length,
         validated: validatedCount,
