@@ -10,11 +10,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { 
-  Menu, 
-  Bell, 
-  UserCircle, 
-  LogOut, 
+import {
+  Menu,
+  Bell,
+  UserCircle,
+  LogOut,
   Settings
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -40,13 +40,13 @@ const Header = ({ isMobileMenuOpen, toggleMobileMenu }: HeaderProps) => {
       >
         <Menu className="h-5 w-5" />
       </Button>
-      
+
       <div className="flex-1">
         <Link to="/dashboard" className="flex items-center gap-2">
-          <img 
-            src="/logo.svg" 
-            alt="OFS Ledger" 
-            className="h-8 w-8" 
+          <img
+            src="/images/logo.png"
+            alt="OFS Ledger"
+            className="h-8 w-8"
             onError={(e) => {
               (e.target as HTMLImageElement).src = "/logo-fallback.png";
             }}
@@ -54,7 +54,7 @@ const Header = ({ isMobileMenuOpen, toggleMobileMenu }: HeaderProps) => {
           <span className="font-bold text-xl hidden sm:inline-block">OFS Ledger</span>
         </Link>
       </div>
-      
+
       <div className="flex items-center gap-2">
         {/* Notifications */}
         <Button
@@ -66,12 +66,12 @@ const Header = ({ isMobileMenuOpen, toggleMobileMenu }: HeaderProps) => {
           <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500"></span>
           <span className="sr-only">Notifications</span>
         </Button>
-        
+
         {/* User Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               className="flex items-center gap-2 rounded-full hover:bg-gray-100"
             >
               <div className="flex items-center justify-center h-8 w-8 rounded-full bg-primary/10">
@@ -98,7 +98,7 @@ const Header = ({ isMobileMenuOpen, toggleMobileMenu }: HeaderProps) => {
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem 
+            <DropdownMenuItem
               onClick={(e) => {
                 e.preventDefault();
                 signOut();

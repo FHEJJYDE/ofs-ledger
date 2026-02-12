@@ -4,13 +4,13 @@ import { useAuth } from "@/context/AuthContext";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { 
-  Wallet, 
-  ArrowDownToLine, 
-  Shield, 
-  User, 
-  LayoutDashboard, 
-  Users, 
+import {
+  Wallet,
+  ArrowDownToLine,
+  Shield,
+  User,
+  LayoutDashboard,
+  Users,
   LogOut,
   KeyRound,
   Settings,
@@ -26,7 +26,7 @@ interface SidebarProps {
 const Sidebar = ({ isMobileMenuOpen, closeMobileMenu }: SidebarProps) => {
   const location = useLocation();
   const { user, profile, signOut } = useAuth();
-  
+
   // Check if user is admin based on profile role or URL path
   const isAdmin = profile?.role === "admin" || location.pathname.startsWith("/admin");
 
@@ -110,10 +110,10 @@ const Sidebar = ({ isMobileMenuOpen, closeMobileMenu }: SidebarProps) => {
         )}
       >
         <div className="flex h-16 items-center border-b px-6 gap-2">
-          <img 
-            src="/logo.svg" 
-            alt="OFS Ledger" 
-            className="h-8 w-8" 
+          <img
+            src="/images/logo.png"
+            alt="OFS Ledger"
+            className="h-8 w-8"
             onError={(e) => {
               (e.target as HTMLImageElement).src = "/logo-fallback.png";
             }}

@@ -48,9 +48,11 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-16 md:h-20">
           {/* Logo - Minimal Text Only */}
           <Link to="/" className="flex-shrink-0 group">
-            <span className="text-2xl font-bold tracking-tight text-slate-900 group-hover:text-indigo-600 transition-colors">
-              OFSLEDGER
-            </span>
+            <img
+              src="/images/logo.png"
+              alt="OFS Ledger"
+              className="h-10 w-auto object-contain transition-transform group-hover:scale-105"
+            />
           </Link>
 
           {/* Desktop Menu - Clean Text Links */}
