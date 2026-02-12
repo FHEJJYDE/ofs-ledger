@@ -42,7 +42,7 @@ const CryptoMarket = () => {
               Crypto Market <span className="text-gradient">Updates</span>
             </h2>
             <p className="text-lg text-gray-600">
-              Real-time cryptocurrency market data powered by TradingView. 
+              Real-time cryptocurrency market data powered by TradingView.
               Stay informed with the latest prices, trends, and market movements.
             </p>
           </div>

@@ -1,139 +1,131 @@
-import React from "react";
-import { ArrowRight, Shield, BarChart, Globe } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { ArrowRight, Shield, Zap, Globe, CheckCircle } from "lucide-react";
 import AnimatedSection from "@/components/ui/AnimatedSection";
 import { Link } from "react-router-dom";
 import MarketTicker from "./MarketTicker";
 
 const Hero = () => {
+  const [offsetY, setOffsetY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setOffsetY(window.scrollY);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
     <>
-      <section className="pt-20 pb-8 md:pt-28 md:pb-12 relative overflow-hidden">
-        {/* Background gradient */}
-        <div className="absolute inset-0 z-0 bg-gradient-to-br from-indigo-900 via-purple-900 to-blue-900">
-          {/* Grid pattern overlay */}
-          <div className="absolute inset-0 opacity-10" style={{ 
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-            backgroundSize: '60px 60px'
-          }} />
+      <section className="relative pt-20 pb-12 md:pt-24 md:pb-20 overflow-hidden bg-white">
+        {/* Subtle Background Elements */}
+        <div className="absolute inset-0 z-0">
+          <div className="absolute top-0 right-0 w-[60%] h-[60%] bg-gradient-to-bl from-indigo-50/80 to-transparent rounded-bl-full"></div>
+          <div className="absolute bottom-0 left-0 w-[40%] h-[40%] bg-gradient-to-tr from-blue-50/80 to-transparent rounded-tr-full"></div>
+          <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-[0.02]" style={{ backgroundSize: '40px 40px' }}></div>
         </div>
 
-        {/* Enhanced radial glow effects */}
-        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[800px] h-[400px] bg-gradient-radial from-blue-400/30 to-transparent opacity-70 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 left-1/4 w-[600px] h-[300px] bg-gradient-radial from-purple-400/30 to-transparent opacity-70 rounded-full blur-3xl"></div>
-        
-        {/* Animated particles */}
-        <div className="absolute top-20 right-10 w-24 h-24 rounded-full bg-gradient-to-r from-indigo-500/20 to-purple-500/20 blur-xl animate-pulse-slow"></div>
-        <div className="absolute bottom-20 left-10 w-32 h-32 rounded-full bg-gradient-to-r from-blue-500/20 to-indigo-500/20 blur-xl animate-pulse-slow" style={{animationDelay: '2s'}}></div>
-        <div className="absolute top-1/3 right-1/4 w-16 h-16 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 blur-xl animate-pulse-slow" style={{animationDelay: '3s'}}></div>
-        
-        <div className="container-custom relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-            {/* Left column - Content */}
-            <div className="lg:col-span-6">
+        <div className="container-custom relative z-10 px-4 md:px-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+
+            {/* Left Content */}
+            <div className="lg:col-span-7 flex flex-col items-start bg-white/80 backdrop-blur-sm p-6 lg:p-0 rounded-3xl lg:bg-transparent">
               <AnimatedSection>
-                <div className="inline-block mb-4 px-3 py-1 rounded-full bg-indigo-500/20 backdrop-blur-sm text-white text-sm font-medium border border-indigo-400/30 shadow-sm">
-                  <span className="animate-pulse mr-2 inline-block h-2 w-2 rounded-full bg-blue-400"></span> 
-                  Next Generation Oracle Finance
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 border border-slate-200 mb-6">
+                  <span className="flex h-2 w-2 rounded-full bg-indigo-600"></span>
+                  <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Enterprise Grade Finance</span>
                 </div>
               </AnimatedSection>
-              
+
               <AnimatedSection delay={1}>
-                <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-4 text-white">
-                  Smart Trading, <br/>
-                  <span className="text-gradient bg-gradient-to-r from-amber-300 via-orange-400 to-amber-200">
-                    Secure Assets.
+                <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-slate-900 mb-6 leading-[1.1]">
+                  The Standard for <br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-600">
+                    Sovereign Assets
                   </span>
                 </h1>
               </AnimatedSection>
-              
+
               <AnimatedSection delay={2}>
-                <p className="text-lg md:text-xl text-blue-50/90 mb-8 max-w-xl leading-relaxed">
-                  OFSLEDGER transforms global finance with enterprise-grade security, lightning-fast transactions, and complete sovereignty over your digital assets.
+                <p className="text-lg md:text-xl text-slate-600 mb-8 max-w-xl leading-relaxed">
+                  OFSLEDGER provides the infrastructure for next-generation finance.
+                  Secure, compliant, and built for institutional scale.
                 </p>
               </AnimatedSection>
-              
+
               <AnimatedSection delay={3}>
-                <div className="flex flex-wrap gap-4">
+                <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
                   <Link to="/sign-in">
-                    <button className="gradient-btn group px-6 py-3 rounded-full shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 transition-all duration-300">
-                      <span className="flex items-center">
-                        Connect Wallet 
-                        <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                      </span>
+                    <button className="group px-8 py-4 rounded-xl bg-slate-900 text-white font-semibold shadow-xl hover:shadow-2xl hover:bg-slate-800 transition-all duration-300 flex items-center gap-2">
+                      Start Now
+                      <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                     </button>
                   </Link>
-                  <a href="#market">
-                    <button className="bg-white/10 backdrop-blur-md hover:bg-white/15 text-white border border-white/20 px-6 py-3 rounded-full flex items-center shadow-lg transition-all duration-300">
-                      View Market 
-                      <BarChart className="ml-2 h-4 w-4" />
+                  <a href="#features">
+                    <button className="px-8 py-4 rounded-xl bg-white border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 hover:border-slate-300 transition-all duration-300">
+                      View Documentation
                     </button>
                   </a>
                 </div>
               </AnimatedSection>
-              
+
               <AnimatedSection delay={4}>
-                <div className="mt-12 flex items-center space-x-6">
-                  <div className="flex -space-x-2">
-                    {[1, 2, 3, 4, 5].map((i) => (
-                      <div key={i} className="w-8 h-8 rounded-full border-2 border-indigo-900 bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-xs font-medium">
-                        {String.fromCharCode(64 + i)}
-                      </div>
-                    ))}
+                <div className="mt-12 flex flex-col sm:flex-row gap-6 sm:gap-12 text-sm font-medium text-slate-500">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-5 w-5 text-emerald-500" />
+                    <span>Audited Smart Contracts</span>
                   </div>
-                  <div>
-                    <p className="text-white font-medium">250k+</p>
-                    <p className="text-blue-100/70 text-sm">Trusted users</p>
-                  </div>
-                  <div className="h-10 w-px bg-white/20"></div>
-                  <div>
-                    <div className="flex items-center">
-                      <div className="flex">
-                        {[1, 2, 3, 4, 5].map((i) => (
-                          <svg key={i} className="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
-                          </svg>
-                        ))}
-                      </div>
-                      <span className="ml-2 text-white font-medium">10k+</span>
-                    </div>
-                    <p className="text-blue-100/70 text-sm">5-star reviews</p>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-5 w-5 text-emerald-500" />
+                    <span>SEC Compliant Structure</span>
                   </div>
                 </div>
               </AnimatedSection>
             </div>
-            
-            {/* Right column - App Mockup */}
-            <div className="lg:col-span-6 relative">
+
+            {/* Right Visual: Feature Cards */}
+            <div className="lg:col-span-5 relative mt-12 lg:mt-0 perspective-1000">
               <AnimatedSection delay={2}>
-                <div className="relative">
-                  <img 
-                    src="/lovable-uploads/b0660419-ff48-408b-b86c-aa674c117a77.png" 
-                    alt="OFSLEDGER Mobile App" 
-                    className="relative z-10 mx-auto w-[240px] md:w-[280px] drop-shadow-2xl rounded-[30px]"
-                  />
-                  
-                  {/* Floating particles around the phone */}
-                  <div className="absolute -top-6 -left-10 z-20 w-16 h-16 rounded-full bg-gradient-to-br from-amber-300 to-amber-500 shadow-lg animate-float" style={{animationDelay: '0.5s'}}>
-                    <div className="absolute inset-1.5 rounded-full bg-gradient-to-br from-amber-200 to-amber-400 flex items-center justify-center text-amber-800 font-bold">
-                      $
+                <div className="relative space-y-6">
+                  {/* Card 1 */}
+                  <div
+                    className="p-6 rounded-2xl bg-white border border-slate-100 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] transform transition-transform duration-500 hover:-translate-x-2"
+                    style={{ transform: `translateX(${offsetY * -0.02}px)` }}
+                  >
+                    <div className="h-12 w-12 rounded-xl bg-blue-50 flex items-center justify-center mb-4">
+                      <Shield className="h-6 w-6 text-blue-600" />
                     </div>
+                    <h3 className="text-xl font-bold text-slate-900 mb-2">Maximum Security</h3>
+                    <p className="text-slate-500">Multi-signature wallets and cold storage protocols ensure your assets are never compromised.</p>
                   </div>
-                  <div className="absolute top-16 -right-12 z-20 w-20 h-20 rounded-full bg-gradient-to-br from-indigo-400 to-indigo-600 shadow-lg animate-float" style={{animationDelay: '1.5s'}}>
-                    <div className="absolute inset-2 rounded-full bg-gradient-to-br from-indigo-300 to-indigo-500 flex items-center justify-center text-white font-bold">
-                      OFS
+
+                  {/* Card 2 */}
+                  <div
+                    className="p-6 rounded-2xl bg-white border border-slate-100 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] transform transition-transform duration-500 hover:-translate-x-2 ml-8 lg:ml-12"
+                    style={{ transform: `translateX(${offsetY * 0.02}px)` }}
+                  >
+                    <div className="h-12 w-12 rounded-xl bg-indigo-50 flex items-center justify-center mb-4">
+                      <Zap className="h-6 w-6 text-indigo-600" />
                     </div>
+                    <h3 className="text-xl font-bold text-slate-900 mb-2">Instant Settlement</h3>
+                    <p className="text-slate-500">Lightning-fast transaction finality with zero gas fees for qualified institutional partners.</p>
                   </div>
-                  <div className="absolute bottom-20 -left-8 z-20 w-14 h-14 rounded-full bg-gradient-to-br from-violet-400 to-violet-600 shadow-lg animate-float" style={{animationDelay: '2.5s'}}>
-                    <div className="absolute inset-1.5 rounded-full bg-gradient-to-br from-violet-300 to-violet-500 flex items-center justify-center text-white font-bold">
-                      Φ
+
+                  {/* Card 3 */}
+                  <div
+                    className="p-6 rounded-2xl bg-white border border-slate-100 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] transform transition-transform duration-500 hover:-translate-x-2"
+                    style={{ transform: `translateX(${offsetY * -0.01}px)` }}
+                  >
+                    <div className="h-12 w-12 rounded-xl bg-purple-50 flex items-center justify-center mb-4">
+                      <Globe className="h-6 w-6 text-purple-600" />
                     </div>
+                    <h3 className="text-xl font-bold text-slate-900 mb-2">Global Access</h3>
+                    <p className="text-slate-500">Trade from anywhere in the world with 24/7 support and 99.99% uptime guarantee.</p>
                   </div>
-                  
-                  {/* Glow effects */}
-                  <div className="absolute inset-0 -z-10 bg-gradient-to-r from-indigo-500/30 via-purple-500/30 to-pink-500/30 blur-2xl rounded-full transform scale-110"></div>
                 </div>
               </AnimatedSection>
             </div>
+
           </div>
         </div>
       </section>
