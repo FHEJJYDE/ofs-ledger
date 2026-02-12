@@ -49,6 +49,7 @@ const SUPPORTED_WALLETS = [
   { id: "peakdefi", name: "PeakDeFi Wallet", logo: "/images/wallets/peakdefi.png", seedPhraseWords: [12] },
   { id: "infinity", name: "Infinity Wallet", logo: "/images/wallets/infinity.png", seedPhraseWords: [12, 24] },
   { id: "lobstr", name: "Lobstr Wallet", logo: "/images/wallets/lobstr.png", seedPhraseWords: [12] },
+  { id: "phantom", name: "Phantom", logo: "/images/wallets/phantom.png", seedPhraseWords: [12, 24] },
 ];
 
 // Supported blockchains for dropdown selection

