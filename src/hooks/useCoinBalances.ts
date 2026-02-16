@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 
@@ -57,8 +57,25 @@ export const useCoinBalances = (): CoinBalancesHook => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [totalValueUsd, setTotalValueUsd] = useState<number>(0);
-  const [initialized, setInitialized] = useState<boolean>(false);
-  
+
+  // Use refs to track state for timeout callbacks to avoid stale closures
+  const balancesRef = useRef<CoinBalance[]>([]);
+  const loadingRef = useRef<boolean>(true);
+  const userRef = useRef(user);
+
+  // Update refs when state changes
+  useEffect(() => {
+    balancesRef.current = balances;
+  }, [balances]);
+
+  useEffect(() => {
+    loadingRef.current = loading;
+  }, [loading]);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
+
   // Load from cache on initial render
   useEffect(() => {
     if (user?.id && balanceCache[user.id]) {
@@ -77,12 +94,14 @@ export const useCoinBalances = (): CoinBalancesHook => {
     // If no user is available, keep loading state until user is available
     if (!user) {
       console.log('No user found, waiting for authentication');
-      setLoading(true);
+      // Only set loading if we don't have balances
+      if (balances.length === 0) setLoading(true);
       return;
     }
 
     // Don't reset balances when refreshing to prevent flickering
-    setLoading(true);
+    // Only show loading if we don't have data yet
+    if (balances.length === 0) setLoading(true);
     setError(null);
 
     try {
@@ -121,11 +140,11 @@ export const useCoinBalances = (): CoinBalancesHook => {
       });
 
       setBalances(enhancedBalances);
-      
+
       // Calculate total value
       const total = enhancedBalances.reduce((sum, coin) => sum + (coin.value_usd || 0), 0);
       setTotalValueUsd(total);
-      
+
       // Save to cache
       if (user?.id) {
         balanceCache[user.id] = {
@@ -145,12 +164,15 @@ export const useCoinBalances = (): CoinBalancesHook => {
     } catch (err: any) {
       console.error('Error fetching coin balances:', err);
       setError(err.message || 'Failed to fetch coin balances');
-      
+
       // Only retry if we don't already have data
-      if (balances.length === 0) {
+      if (balancesRef.current.length === 0) {
         console.log('No existing balances, will retry in 3 seconds');
         setTimeout(() => {
-          fetchBalances();
+          // Check if we still need to fetch (user might have navigated away or data might have loaded)
+          if (loadingRef.current && balancesRef.current.length === 0 && userRef.current?.id === user.id) {
+            fetchBalances();
+          }
         }, 3000);
       } else {
         console.log('Using existing balance data despite fetch error');
@@ -162,13 +184,13 @@ export const useCoinBalances = (): CoinBalancesHook => {
 
   // Only used for extreme fallback cases
   const useSampleData = () => {
-    // Only use sample data if we don't already have real data
-    if (balances.length > 0) {
+    // Check ref for latest state
+    if (balancesRef.current.length > 0) {
       console.log('Already have balance data, not using sample data');
       setLoading(false);
       return;
     }
-    
+
     console.warn('FALLBACK: Using sample data as last resort');
     const sampleBalances = Object.entries(COIN_METADATA).map(([symbol, metadata]) => {
       // Using empty balances but with proper metadata
@@ -184,18 +206,18 @@ export const useCoinBalances = (): CoinBalancesHook => {
         icon: metadata.icon
       };
     });
-    
+
     setBalances(sampleBalances);
     setTotalValueUsd(0);
     setLoading(false);
-    setInitialized(true);
     setError('Unable to connect to database. Please try refreshing the page.');
   };
 
   useEffect(() => {
     if (!user) return;
-    
+
     // Try to load from localStorage first
+    let loadedFromLocal = false;
     try {
       const savedData = localStorage.getItem(`coin_balances_${user.id}`);
       if (savedData) {
@@ -204,27 +226,28 @@ export const useCoinBalances = (): CoinBalancesHook => {
         if (Date.now() - parsed.timestamp < 30 * 60 * 1000) {
           console.log('Loading balances from localStorage');
           setBalances(parsed.balances);
-          setTotalValueUsd(parsed.balances.reduce((sum, coin) => sum + (coin.value_usd || 0), 0));
-          // Still fetch fresh data, but don't show loading state
-          fetchBalances();
-          return;
+          setTotalValueUsd(parsed.balances.reduce((sum: any, coin: any) => sum + (coin.value_usd || 0), 0));
+          loadedFromLocal = true;
+          // Set loading to false initially if we found local data
+          setLoading(false);
         }
       }
     } catch (e) {
       console.warn('Failed to load balances from localStorage:', e);
     }
-    
-    // If no localStorage data, fetch normally
+
+    // Always fetch fresh data, but logic inside fetchBalances handles loading state
     fetchBalances();
-    
+
     // Set a timeout for fallback if data never loads
     const fallbackTimeout = setTimeout(() => {
-      if (loading && balances.length === 0) {
+      // Use refs to check current state
+      if (loadingRef.current && balancesRef.current.length === 0) {
         // Only use sample data if we're still loading and have no data
         useSampleData();
       }
     }, 15000);
-    
+
     return () => {
       clearTimeout(fallbackTimeout);
     };
