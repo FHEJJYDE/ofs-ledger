@@ -6,22 +6,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from "@/components/ui/table";
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { 
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -52,7 +52,8 @@ const SUPPORTED_COINS = [
   { symbol: 'BTC', name: 'Bitcoin', icon: '/blockchains/bitcoin.png' },
   { symbol: 'XRP', name: 'XRP', icon: '/blockchains/xrp.png' },
   { symbol: 'ETH', name: 'Ethereum', icon: '/blockchains/ethereum.png' },
-  { symbol: 'SOL', name: 'Solana', icon: '/blockchains/solana.png' }
+  { symbol: 'SOL', name: 'Solana', icon: '/blockchains/solana.png' },
+  { symbol: 'USDT', name: 'Tether', icon: '/blockchains/usdt.png' }
 ];
 
 const CoinBalancesAdmin = () => {
@@ -76,14 +77,14 @@ const CoinBalancesAdmin = () => {
   const [manualUserIdInput, setManualUserIdInput] = useState<string>("");
   const [manualUserEmailInput, setManualUserEmailInput] = useState<string>("");
   const [showManualUserInput, setShowManualUserInput] = useState<boolean>(false);
-  
+
   // Get userId from URL query params if available
   const urlUserId = searchParams.get("userId");
 
   // Fetch users and balances
   useEffect(() => {
     fetchUsers();
-    
+
     // Set a timeout to prevent infinite loading
     const timer = setTimeout(() => {
       if (loading) {
@@ -92,10 +93,10 @@ const CoinBalancesAdmin = () => {
         setError("Loading timed out. Please try again.");
       }
     }, 10000); // 10 seconds timeout
-    
+
     return () => clearTimeout(timer);
   }, []);
-  
+
   // If userId is provided in URL, select that user automatically
   useEffect(() => {
     if (urlUserId && users.length > 0) {
@@ -135,7 +136,7 @@ const CoinBalancesAdmin = () => {
       }
 
       setUsers(data || []);
-      
+
       // Select the first user by default
       if (data && data.length > 0 && !selectedUser) {
         setSelectedUser(data[0]);
@@ -153,7 +154,7 @@ const CoinBalancesAdmin = () => {
       setUsersLoading(false);
     }
   };
-  
+
   // Handle manual user selection
   const handleManualUserSelect = () => {
     if (!manualUserIdInput || !manualUserEmailInput) {
@@ -164,17 +165,17 @@ const CoinBalancesAdmin = () => {
       });
       return;
     }
-    
+
     const manualUser: User = {
       id: manualUserIdInput,
       email: manualUserEmailInput,
       full_name: manualUserEmailInput.split('@')[0]
     };
-    
+
     setSelectedUser(manualUser);
     setShowManualUserInput(false);
     fetchBalances(manualUser.id);
-    
+
     toast({
       title: "Success",
       description: `Manually selected user ${manualUser.email}`,
@@ -251,7 +252,7 @@ const CoinBalancesAdmin = () => {
 
     try {
       const balanceValue = parseFloat(newBalanceValue);
-      
+
       if (isNaN(balanceValue)) {
         throw new Error("Please enter a valid number");
       }
@@ -261,15 +262,15 @@ const CoinBalancesAdmin = () => {
       }
 
       setLoading(true);
-      
+
       if (isAddingNew) {
         // Check if this coin already exists for the user
         const existingCoin = balances.find(b => b.coin_symbol === newCoinSymbol);
-        
+
         if (existingCoin) {
           throw new Error(`User already has a ${newCoinSymbol} balance. Please edit the existing one.`);
         }
-        
+
         try {
           // Try using RPC function first
           const { error: rpcError } = await supabase.rpc('update_user_coin_balance', {
@@ -296,7 +297,7 @@ const CoinBalancesAdmin = () => {
         } catch (saveError: any) {
           throw new Error(`Failed to add balance: ${saveError.message}`);
         }
-        
+
         toast({
           title: "Success",
           description: `Added ${newCoinSymbol} balance for ${selectedUser.email}`,
@@ -327,13 +328,13 @@ const CoinBalancesAdmin = () => {
         } catch (saveError: any) {
           throw new Error(`Failed to update balance: ${saveError.message}`);
         }
-        
+
         toast({
           title: "Success",
           description: `Updated ${editingBalance.coin_symbol} balance for ${selectedUser.email}`,
         });
       }
-      
+
       // Refresh balances
       await fetchBalances(selectedUser.id);
       setEditDialogOpen(false);
@@ -349,7 +350,7 @@ const CoinBalancesAdmin = () => {
     }
   };
 
-  const filteredUsers = users.filter(user => 
+  const filteredUsers = users.filter(user =>
     (user.email?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
     (user.full_name?.toLowerCase() || "").includes(searchQuery.toLowerCase())
   );
@@ -436,15 +437,15 @@ const CoinBalancesAdmin = () => {
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
                 </div>
-                
+
                 <div className="border rounded-md max-h-[400px] overflow-y-auto">
                   {users
-                    .filter(user => 
+                    .filter(user =>
                       user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
                       (user.full_name && user.full_name.toLowerCase().includes(searchQuery.toLowerCase()))
                     )
                     .map(user => (
-                      <div 
+                      <div
                         key={user.id}
                         className={`flex items-center gap-3 p-3 cursor-pointer hover:bg-muted transition-colors ${selectedUser?.id === user.id ? 'bg-primary/10' : ''}`}
                         onClick={() => setSelectedUser(user)}
@@ -468,10 +469,10 @@ const CoinBalancesAdmin = () => {
                       </div>
                     ))}
                 </div>
-                
-                <Button 
-                  variant="outline" 
-                  className="w-full" 
+
+                <Button
+                  variant="outline"
+                  className="w-full"
                   onClick={() => setShowManualUserInput(true)}
                 >
                   <Users className="h-4 w-4 mr-2" />
@@ -512,8 +513,8 @@ const CoinBalancesAdmin = () => {
                   <p className="text-sm mt-2">Try applying the database migration in the Supabase dashboard.</p>
                 </div>
                 <div className="flex gap-2 mt-2">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => {
                       setLoading(true);
                       setLoadingTimeout(false);
@@ -562,9 +563,9 @@ const CoinBalancesAdmin = () => {
                           <TableCell>
                             <div className="flex items-center gap-2">
                               <div className="w-6 h-6 rounded-full bg-background flex items-center justify-center">
-                                <img 
-                                  src={coinDetails?.icon} 
-                                  alt={balance.coin_symbol} 
+                                <img
+                                  src={coinDetails?.icon}
+                                  alt={balance.coin_symbol}
                                   className="w-5 h-5"
                                   onError={(e) => {
                                     (e.target as HTMLImageElement).src = '/placeholder-coin.svg';
@@ -614,12 +615,12 @@ const CoinBalancesAdmin = () => {
               {isAddingNew ? "Add New Balance" : "Edit Balance"}
             </DialogTitle>
             <DialogDescription>
-              {isAddingNew 
-                ? "Add a new cryptocurrency balance for this user" 
+              {isAddingNew
+                ? "Add a new cryptocurrency balance for this user"
                 : `Update the ${editingBalance?.coin_symbol} balance for ${selectedUser?.email}`}
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4 py-4">
             {isAddingNew && (
               <div className="space-y-2">
@@ -633,9 +634,9 @@ const CoinBalancesAdmin = () => {
                       <SelectItem key={coin.symbol} value={coin.symbol}>
                         <div className="flex items-center gap-2">
                           <div className="w-5 h-5 rounded-full bg-background flex items-center justify-center">
-                            <img 
-                              src={coin.icon} 
-                              alt={coin.symbol} 
+                            <img
+                              src={coin.icon}
+                              alt={coin.symbol}
                               className="w-4 h-4"
                               onError={(e) => {
                                 (e.target as HTMLImageElement).src = '/placeholder-coin.svg';
@@ -650,7 +651,7 @@ const CoinBalancesAdmin = () => {
                 </Select>
               </div>
             )}
-            
+
             <div className="space-y-2">
               <Label htmlFor="balance-value">Balance</Label>
               <div className="flex items-center gap-2">
@@ -669,7 +670,7 @@ const CoinBalancesAdmin = () => {
               </div>
             </div>
           </div>
-          
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
               Cancel
